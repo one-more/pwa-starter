@@ -1,5 +1,4 @@
-import { Action } from 'redux';
-import { createAction, handleActions } from 'redux-actions';
+import { Action, createAction, handleActions } from 'redux-actions';
 import { toCollection } from '~/modules/backend';
 import { Dispatch } from '~/modules/store/shared';
 
@@ -9,7 +8,8 @@ export type ErrorsState = {
     [module in Module]: {
         title: string;
         message: string;
-        module: Module;
+        error: string;
+        info: ErrorInfo;
     };
 };
 
@@ -33,100 +33,6 @@ const reportPayload = {
     dateTime: new Date().toString(),
 };
 
-export interface ErrorsActions {
-    setError(payload: ErrorPayload): Action;
-    clearError(module: Module): Action;
-    networkError(
-        module: Module,
-        error?: string,
-        message?: string,
-        title?: string,
-    ): (dispatch: Dispatch<WithErrorsState>) => void;
-    requestError(
-        module: string,
-        error?: string,
-        message?: string,
-        title?: string,
-    ): (dispatch: Dispatch<WithErrorsState>) => void;
-    applicationError(
-        info: ErrorInfo,
-        module: Module,
-        error?: string,
-        message?: string,
-        title?: string,
-    ): (dispatch: Dispatch<WithErrorsState>) => void;
-}
-
-export const errorsActions: ErrorsActions = {
-    setError: createAction('SET_ERROR'),
-    clearError: createAction('CLEAR_ERROR', (module: Module) => ({ module })),
-    networkError: (module: Module, error?: string, message?: string, title?: string) => (
-        dispatch: Dispatch<WithErrorsState>,
-    ) => {
-        const payload: ErrorPayload = {
-            module,
-            message: message || 'An Error occurred during network request - try to relaunch app',
-            title: title || 'Network Error',
-            error,
-            info: null,
-        };
-        dispatch(errorsActions.setError(payload));
-        toCollection('errors').add({
-            ...payload,
-            device,
-            ...reportPayload,
-        });
-    },
-    requestError: (module: Module, error?: string, message?: string, title?: string) => (
-        dispatch: Dispatch<WithErrorsState>,
-    ) => {
-        const payload: ErrorPayload = {
-            module,
-            message: message || 'An Error occurred during request - please try again later',
-            title: title || 'Request Error',
-            error,
-            info: null,
-        };
-        dispatch(errorsActions.setError(payload));
-        toCollection('errors').add({
-            ...payload,
-            device,
-            ...reportPayload,
-        });
-    },
-    applicationError: (info: ErrorInfo, module: Module, error?: string, message?: string, title?: string) => (
-        dispatch: Dispatch<WithErrorsState>,
-    ) => {
-        const payload: ErrorPayload = {
-            module,
-            message: message || 'An Error occurred - please try again later',
-            title: title || 'Application Error',
-            error,
-            info,
-        };
-        dispatch(errorsActions.setError(payload));
-        toCollection('errors').add({
-            ...payload,
-            device,
-            ...reportPayload,
-        });
-    },
-};
-
-export const errorsReducer = handleActions<ErrorsState, ErrorPayload>(
-    {
-        [errorsActions.setError.toString()]: (state, { payload: { module, message, title, error, info } }) => ({
-            ...state,
-            [module]: { message, title, module, error, info },
-        }),
-        [errorsActions.clearError.toString()]: (state, { payload: { module } }) => ({
-            ...state,
-            [module]: null,
-        }),
-    },
-    errorsDefaultState,
-);
-
 export type ErrorPayload = {
     error: string;
     message?: string;
@@ -135,11 +41,91 @@ export type ErrorPayload = {
     info: ErrorInfo;
 };
 
+export type ClearErrorPayload = {
+    module: Module;
+};
+
+export interface ErrorsActions {
+    setError(payload: ErrorPayload): Action<ErrorPayload>;
+    clearError(module: Module): Action<ClearErrorPayload>;
+    networkError(
+        module: Module,
+        error?: string,
+        message?: string,
+        title?: string,
+        info?: ErrorInfo,
+    ): (dispatch: Dispatch<WithErrorsState>) => void;
+    requestError(
+        module: string,
+        error?: string,
+        message?: string,
+        title?: string,
+        info?: ErrorInfo,
+    ): (dispatch: Dispatch<WithErrorsState>) => void;
+    applicationError(
+        module: Module,
+        error?: string,
+        message?: string,
+        title?: string,
+        info?: ErrorInfo,
+    ): (dispatch: Dispatch<WithErrorsState>) => void;
+}
+
+const asyncAction = (defaultMessage: string, defaultTitle: string) => (
+    module: Module,
+    error?: string,
+    message?: string,
+    title?: string,
+    info?: ErrorInfo,
+) => (dispatch: Dispatch<WithErrorsState>) => {
+    const payload: ErrorPayload = {
+        module,
+        message: message || defaultMessage,
+        title: title || defaultTitle,
+        error,
+        info,
+    };
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    dispatch(errorsActions.setError(payload));
+    toCollection('errors').add({
+        ...payload,
+        device,
+        ...reportPayload,
+    });
+};
+
+export const errorsActions: ErrorsActions = {
+    setError: createAction('SET_ERROR'),
+    clearError: createAction('CLEAR_ERROR', (module: Module) => ({ module })),
+    networkError: asyncAction('An Error occurred during network request - try to relaunch app', 'Network Error'),
+    requestError: asyncAction('An Error occurred during request - please try again later', 'Request Error'),
+    applicationError: asyncAction('An Error occurred - please try again later', 'Application Error'),
+};
+
+type PossiblePayloads = ErrorPayload | ClearErrorPayload;
+
+export const errorsReducer = handleActions<ErrorsState, PossiblePayloads>(
+    {
+        [errorsActions.setError.toString()]: (
+            state,
+            { payload: { module, message, title, error, info } }: Action<ErrorPayload>,
+        ): ErrorsState => ({
+            ...state,
+            [module]: { message, title, error, info },
+        }),
+        [errorsActions.clearError.toString()]: (state, { payload: { module } }): ErrorsState => ({
+            ...state,
+            [module]: null,
+        }),
+    },
+    errorsDefaultState,
+);
+
 export function reduxErrorHandler(
     error: Error,
     getState: Function,
-    lastAction: Action,
+    lastAction: Action<unknown>,
     dispatch: Dispatch<WithErrorsState>,
 ): void {
-    dispatch(errorsActions.applicationError(null, 'application', error.toString()));
+    dispatch(errorsActions.applicationError('application', error.toString()));
 }

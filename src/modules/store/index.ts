@@ -2,7 +2,7 @@ import { applyMiddleware, combineReducers, compose, createStore } from 'redux';
 import { enableBatching } from 'redux-batched-actions';
 import thunk from 'redux-thunk';
 import { persistStore, persistReducer } from 'redux-persist';
-import hardSet from 'redux-persist/lib/stateReconciler/hardSet';
+import autoMergeLevel1 from 'redux-persist/lib/stateReconciler/autoMergeLevel1';
 import * as storage from 'localforage';
 import { connectRouter, RouterState } from 'connected-react-router';
 import reduxCatch from 'redux-catch';
@@ -12,16 +12,15 @@ import { Action } from 'redux';
 import { PersistConfig } from 'redux-persist/es/types';
 import { history } from '~/modules/history';
 
-const persistKey = 'rootV1';
-
 export type State = {
     router: RouterState;
 } & WithErrorsState;
 
 const persistConfig: PersistConfig<State> = {
-    key: persistKey,
+    key: 'primary',
+    version: 1,
     storage,
-    stateReconciler: hardSet,
+    stateReconciler: autoMergeLevel1,
     blacklist: [],
 };
 
