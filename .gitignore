@@ -1,0 +1,7 @@
+node_modules
+.idea
+dist
+settings
+.cache
+npm-debug.log
+coverage
