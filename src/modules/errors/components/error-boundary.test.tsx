@@ -50,7 +50,13 @@ describe('ErrorBoundary', () => {
 
         expect(wrapper.find(App)).toHaveLength(0);
         expect(wrapper.find(ErrorScreen)).toHaveLength(1);
-        expect(emptyProps.applicationError).toHaveBeenCalledWith(null, 'application', renderError.toString());
+        expect(emptyProps.applicationError).toHaveBeenCalledWith(
+            'application',
+            renderError.toString(),
+            null,
+            null,
+            null,
+        );
 
         wrapper.update();
     });

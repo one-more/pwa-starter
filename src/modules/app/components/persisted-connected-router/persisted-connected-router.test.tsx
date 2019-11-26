@@ -2,7 +2,7 @@ import * as React from 'react';
 import { mount } from 'enzyme';
 import { PersistedConnectedRouterComponent, PersistedConnectedRouterProps } from './index';
 import { ReactNode } from 'react';
-import { ConnectedRouter, push } from 'connected-react-router';
+import { ConnectedRouter, push, RouterState } from 'connected-react-router';
 import { isInStandaloneMode } from '~/modules/device';
 
 jest.mock('connected-react-router', () => ({
@@ -16,25 +16,53 @@ jest.mock('~/modules/device', () => ({
 }));
 
 describe('PersistedConnectedRouter', () => {
-    const emptyProps: PersistedConnectedRouterProps = {
-        dispatch: jest.fn(),
-        history: {
-            location: {
-                pathname: '/',
+    const getEmptyProps = (): PersistedConnectedRouterProps => {
+        const location = {
+            pathname: '/',
+            search: '',
+            state: '',
+            hash: '',
+        };
+        return {
+            dispatch: jest.fn(),
+            history: {
+                location: { ...location },
+                length: 0,
+                action: 'REPLACE',
+                push(): void {
+                    return;
+                },
+                replace(): void {
+                    return;
+                },
+                go() {
+                    return;
+                },
+                goBack() {
+                    return;
+                },
+                goForward(): void {
+                    return;
+                },
+                block() {
+                    return () => {};
+                },
+                listen() {
+                    return () => {};
+                },
+                createHref() {
+                    return '';
+                },
             },
-        },
-        router: {
-            location: {
-                pathname: '/',
+            router: {
+                location: { ...location },
+                action: 'REPLACE',
             },
-            action: {
-                type: 'RouterAction',
+            errors: {
+                application: null,
             },
-        },
-        errors: {
-            application: null,
-        },
-        children: null,
+            children: null,
+        };
     };
     const enableStandaloneMode = () => {
         (isInStandaloneMode as jest.Mock).mockImplementation(() => true);
@@ -46,12 +74,10 @@ describe('PersistedConnectedRouter', () => {
     beforeEach(() => {
         (isInStandaloneMode as jest.Mock).mockReset();
         (push as jest.Mock).mockReset();
-        (emptyProps.dispatch as jest.Mock).mockReset();
-        emptyProps.history.location.pathname = '/';
-        emptyProps.router.location.pathname = '/';
     });
 
     it('renders ConnectedRouter and children', () => {
+        const emptyProps = getEmptyProps();
         function App() {
             return <div>1</div>;
         }
@@ -65,6 +91,8 @@ describe('PersistedConnectedRouter', () => {
     });
     it('does not push route if not in stand alone mode or already in location', () => {
         disableStandaloneMode();
+
+        const emptyProps = getEmptyProps();
         mount(<PersistedConnectedRouterComponent {...emptyProps} />);
 
         expect(push).toHaveBeenCalledTimes(0);
@@ -80,6 +108,8 @@ describe('PersistedConnectedRouter', () => {
     });
     it('pushes route if in stand alone mode and location differs from saved one', () => {
         enableStandaloneMode();
+
+        const emptyProps = getEmptyProps();
         emptyProps.router.location.pathname = '/1';
 
         mount(<PersistedConnectedRouterComponent {...emptyProps} />);
@@ -90,11 +120,11 @@ describe('PersistedConnectedRouter', () => {
     });
     it('does not fall if router has no location', () => {
         enableStandaloneMode();
-        const router = {
-            location: null as object,
-            action: {
-                type: 'RouterAction',
-            },
+
+        const emptyProps = getEmptyProps();
+        const router: RouterState = {
+            location: null,
+            action: 'POP',
         };
 
         mount(<PersistedConnectedRouterComponent {...emptyProps} router={router} />);

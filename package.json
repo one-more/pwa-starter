@@ -63,8 +63,9 @@
     "start": "webpack-dev-server --config webpack.config.dev.js",
     "build": "webpack --config webpack.config.prod.js",
     "lint": "eslint . --ext .ts --ext tsx --fix",
-    "deps-graph": "depcruise --exclude \"^node_modules\" --output-type dot src | dot -T svg > dependencygraph.svg",
-    "deps-validate": "depcruise --validate .dependency-cruiser.js src"
+    "deps:graph": "depcruise --exclude \"^node_modules\" --output-type dot src | dot -T svg > dependencygraph.svg",
+    "deps:validate": "depcruise --validate .dependency-cruiser.js src",
+      "check:types": "tsc --noEmit"
   },
   "author": "one-more",
   "license": "SEE LICENSE IN LICENSE"

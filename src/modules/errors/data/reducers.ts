@@ -25,11 +25,11 @@ export type ErrorInfo = {
     componentStack: string;
 };
 
-const device = {
+export const device = {
     userAgent: window.navigator.userAgent,
 };
 
-const reportPayload = {
+export const reportPayload = {
     dateTime: new Date().toString(),
 };
 
@@ -71,7 +71,7 @@ export interface ErrorsActions {
     ): (dispatch: Dispatch<WithErrorsState>) => void;
 }
 
-const asyncAction = (defaultMessage: string, defaultTitle: string) => (
+export const asyncAction = (defaultMessage: string, defaultTitle: string) => (
     module: Module,
     error?: string,
     message?: string,

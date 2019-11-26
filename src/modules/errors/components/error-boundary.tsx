@@ -21,7 +21,7 @@ export class ErrorBoundaryComponent extends PureComponent<ErrorBoundaryProps, St
     }
 
     componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-        this.props.applicationError(errorInfo, 'application', error.toString());
+        this.props.applicationError('application', error.toString(), null, null, errorInfo);
     }
 
     tryToReRender = () => {

@@ -16,9 +16,11 @@ export type State = {
     router: RouterState;
 } & WithErrorsState;
 
+export const version = 1;
+
 const persistConfig: PersistConfig<State> = {
     key: 'primary',
-    version: 1,
+    version,
     storage,
     stateReconciler: autoMergeLevel1,
     blacklist: [],

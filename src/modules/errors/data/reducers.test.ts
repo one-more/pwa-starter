@@ -1,11 +1,15 @@
 import {
+    asyncAction,
+    device,
     ErrorInfo,
     ErrorPayload,
+    ErrorsActions,
     errorsActions,
     errorsDefaultState,
     errorsReducer,
     ErrorsState,
     reduxErrorHandler,
+    reportPayload,
 } from '../data/reducers';
 import { toCollection } from '~/modules/backend';
 import { Action } from 'redux-actions';
@@ -56,7 +60,89 @@ describe('tests reducer and actions', () => {
             expect(errorsReducer(state, errorsActions.clearError('application'))).toStrictEqual(errorsDefaultState);
         });
     });
-    describe('actions', () => {});
+    describe('asyncAction', () => {
+        it('sets default message & title to payload', () => {
+            const spy = jest.spyOn(errorsActions, 'setError');
+            const defaultMessage = 'default message',
+                defaultTitle = 'default title',
+                dispatch = jest.fn(),
+                module = 'application',
+                payload: ErrorPayload = {
+                    module,
+                    message: defaultMessage,
+                    title: defaultTitle,
+                    error: undefined,
+                    info: undefined,
+                };
+            asyncAction(defaultMessage, defaultTitle)(module)(dispatch);
+            expect(errorsActions.setError).toHaveBeenCalledWith(payload);
+            expect(dispatch).toHaveBeenCalledWith({
+                type: 'SET_ERROR',
+                payload,
+            });
+
+            spy.mockRestore();
+        });
+        it('calls toCollection for errors collection', () => {
+            const defaultMessage = 'default message',
+                defaultTitle = 'default title',
+                dispatch = jest.fn(),
+                module = 'application',
+                payload: ErrorPayload = {
+                    module,
+                    message: 'message',
+                    title: 'title',
+                    error: 'error',
+                    info: {
+                        componentStack: '1,2,3',
+                    },
+                };
+
+            const add = jest.fn();
+            (toCollection as jest.Mock).mockImplementation(() => ({ add }));
+            asyncAction(defaultMessage, defaultTitle)(
+                module,
+                payload.error,
+                payload.message,
+                payload.title,
+                payload.info,
+            )(dispatch);
+
+            expect(toCollection).toHaveBeenCalledWith('errors');
+            expect(add).toHaveBeenCalledWith({
+                ...payload,
+                device,
+                ...reportPayload,
+            });
+        });
+    });
+    describe('actions', () => {
+        it('calls actions with appropriate default message & title', () => {
+            const cases = [
+                ['networkError', 'An Error occurred during network request - try to relaunch app', 'Network Error'],
+                ['requestError', 'An Error occurred during request - please try again later', 'Request Error'],
+                ['applicationError', 'An Error occurred - please try again later', 'Application Error'],
+            ];
+            const module = 'application';
+            cases.forEach(testCase => {
+                const [action, message, title] = testCase,
+                    payload: ErrorPayload = {
+                        module,
+                        message,
+                        title,
+                        error: undefined,
+                        info: undefined,
+                    },
+                    dispatch = jest.fn();
+                const spy = jest.spyOn(errorsActions, 'setError');
+
+                errorsActions[action as 'networkError' | 'requestError' | 'applicationError'](module)(dispatch);
+                expect(spy).toHaveBeenCalledWith(payload);
+
+                spy.mockRestore();
+            });
+        });
+    });
 });
 describe('reduxErrorHandler', () => {
     it('dispatches applicationError action', () => {
