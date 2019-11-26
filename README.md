@@ -20,11 +20,11 @@ run tests with coverage (Jest)
 run linter (eslint)
 
 ````
-    npm run deps-graph
+    npm run deps:graph
 ````
 create dependencies graph(svg)
 
 ````
-    npm run deps-validate
+    npm run deps:validate
 ````
 validate dependencies against rules (no circular etc)
