@@ -6,6 +6,7 @@ import { isInStandaloneMode, isIPhone, isSafari } from '~/modules/device';
 import styled from 'styled-components';
 import AddBoxIcon from '@material-ui/icons/AddBox';
 import { IOSShareIcon } from '~/modules/components/icons/ios-share-icon';
+import { Trans } from '~/modules/i18n';
 
 const Popper = styled.div`
     position: fixed;
@@ -73,9 +74,9 @@ export class AddToIPhone extends PureComponent<Props, State> {
                 <Popper>
                     <StyledAddBoxIcon />
                     <Typography>
-                        Install this webapp on your IPhone: tap
+                        <Trans i18nKey="addToHomeScreen.part1" />
                         <ShareIcon />
-                        and then Add to home screen
+                        <Trans i18nKey="addToHomeScreen.part2" />
                     </Typography>
                 </Popper>
             </ClickAwayListener>

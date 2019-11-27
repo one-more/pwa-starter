@@ -1,6 +1,10 @@
 import { mount } from 'enzyme';
 import * as React from 'react';
 import { AddToIPhone } from './index';
+import { ReactNode } from 'react';
+jest.mock('~/modules/i18n', () => ({
+    Trans: (): ReactNode => null,
+}));
 
 jest.mock('~/modules/device', () => ({
     isInStandaloneMode: () => false,

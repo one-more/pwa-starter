@@ -1,0 +1,12 @@
+{
+    "translations": {
+        "addToHomeScreen": {
+            "part1": "Install this webapp on your IPhone: tap",
+            "part2": "and then Add to home screen"
+        },
+        "serviceWorker": {
+            "updateAvailable": "New version is available",
+            "update": "Update"
+        }  
+    }
+}
