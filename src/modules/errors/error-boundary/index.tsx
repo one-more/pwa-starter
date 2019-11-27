@@ -7,17 +7,19 @@ import { ErrorScreen } from '~/modules/screens/with-errors';
 
 type State = {
     hasError: boolean;
+    error?: Error;
 };
 
 export type ErrorBoundaryProps = Pick<ErrorsActions, 'applicationError'>;
 
 export class ErrorBoundaryComponent extends PureComponent<ErrorBoundaryProps, State> {
-    state = {
+    state: State = {
         hasError: false,
+        error: null,
     };
 
-    static getDerivedStateFromError() {
-        return { hasError: true };
+    static getDerivedStateFromError(error: Error) {
+        return { hasError: true, error };
     }
 
     componentDidCatch(error: Error, errorInfo: ErrorInfo) {
@@ -25,11 +27,15 @@ export class ErrorBoundaryComponent extends PureComponent<ErrorBoundaryProps, St
     }
 
     tryToReRender = () => {
-        this.setState({ hasError: false });
+        this.setState({ hasError: false, error: null });
     };
 
     render() {
-        return this.state.hasError ? <ErrorScreen tryToReRender={this.tryToReRender} /> : this.props.children;
+        return this.state.hasError ? (
+            <ErrorScreen error={this.state.error} tryToReRender={this.tryToReRender} />
+        ) : (
+            this.props.children
+        );
     }
 }
 

@@ -39,14 +39,20 @@ describe('ErrorBoundary', () => {
             return <div>1</div>;
         }
         const wrapper = mount(
-            <ErrorBoundaryComponent {...emptyProps}>
-                <App />
-            </ErrorBoundaryComponent>,
-        );
+                <ErrorBoundaryComponent {...emptyProps}>
+                    <App />
+                </ErrorBoundaryComponent>,
+            ),
+            error = new Error('error1');
 
         wrapper.instance().componentDidCatch(renderError, null);
-        wrapper.instance().setState(ErrorBoundaryComponent.getDerivedStateFromError());
+        wrapper.instance().setState(ErrorBoundaryComponent.getDerivedStateFromError(error));
         wrapper.update();
+
+        expect(wrapper.instance().state).toStrictEqual({
+            hasError: true,
+            error,
+        });
 
         expect(wrapper.find(App)).toHaveLength(0);
         expect(wrapper.find(ErrorScreen)).toHaveLength(1);
@@ -60,18 +66,28 @@ describe('ErrorBoundary', () => {
 
         wrapper.update();
     });
-    it('passes tryToReRender prop', () => {
-        const wrapper = mount(
-            <ErrorBoundaryComponent {...emptyProps}>
-                <App />
-            </ErrorBoundaryComponent>,
-        );
+    it('passes tryToReRender & error props', () => {
+        const wrapper = mount<ErrorBoundaryComponent>(
+                <ErrorBoundaryComponent {...emptyProps}>
+                    <App />
+                </ErrorBoundaryComponent>,
+            ),
+            error = new Error('error2');
 
         wrapper.instance().componentDidCatch(renderError, null);
-        wrapper.instance().setState(ErrorBoundaryComponent.getDerivedStateFromError());
+        wrapper.instance().setState(ErrorBoundaryComponent.getDerivedStateFromError(error));
         wrapper.update();
 
+        expect(wrapper.instance().state).toStrictEqual({
+            hasError: true,
+            error,
+        });
+
         expect(wrapper.find(App)).toHaveLength(0);
+        expect(wrapper.find(ErrorScreen).props()).toStrictEqual({
+            error,
+            tryToReRender: wrapper.instance().tryToReRender,
+        });
 
         wrapper
             .find(ErrorScreen)
